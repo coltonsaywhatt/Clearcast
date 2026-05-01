@@ -1,67 +1,368 @@
-<div class="search">
-  <form #form="ngForm" (submit)="onSubmit()">
-      <input type="text" placeholder="Search city" name="city" [(ngModel)]="cityName">
-  </form>
-</div>
-
-
-<div class="container">
-  <div class="upper-data">
-    <img src="../assets/51+cUpJa0aS._SS500_.jpg">
-    <!-- <img src="../assets/51+cUpJa0aS._SS500_.jpg" *ngIf="weatherData?.main?.temp > 60" > -->
-    <!-- <img src="../assets/cold.jpg" *ngIf="weatherData?.main?.temp <= 60">   -->
-    <div class="weather-data">
-      <div class="location">{{ weatherData?.name }}</div>
-      <div class="temperature">{{ weatherData?.main?.temp| number: '1.0-0'}}°F</div>
-    </div>
+<main class="app-shell" [ngClass]="[themeClass, themeMode]">
+  <div class="atmosphere"></div>
+  <div class="sky-noise" aria-hidden="true"></div>
+  <div class="orbit-field" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
-  
-  <div class="lower-data">
-      <div class="more-info-label">
-      More Information
-      </div>
-      <div class="more-info-container">
-      <div class="info-block">
-          <div class="info-block-label">
-          <img src="../assets/Min.png">
-          <span>min</span>
+  <div class="content-wrapper">
+    <header class="top-bar">
+      <div class="header-glow" aria-hidden="true"></div>
+      <div class="brand-wrap">
+        <div class="brand" aria-label="SkySense weather dashboard">
+          <span class="brand-mark"><i class="fa-solid fa-cloud-sun"></i></span>
+          <div>
+            <span class="brand-kicker">SkySense OS</span>
+            <h1>Weather Command</h1>
+            <p>Operational weather intelligence for the day ahead.</p>
           </div>
-          <div class="info-block-value">
-          {{weatherData?.main?.temp_min | number: '1.0-0'}}°F
-          </div>
-      </div>
-  
-      <div class="info-block">
-          <div class="info-block-label">
-          <img src="../assets/Max.png">
-          <span>max</span>
-          </div>
-          <div class="info-block-value">
-          {{weatherData?.main?.temp_max | number: '1.0-0'}}°F
-          </div>
-      </div>
-  
-      <div class="info-block">
-          <div class="info-block-label">
-          <img src="../assets/Humidity.png">
-          <span>humidity</span>
-          </div>
-          <div class="info-block-value">
-          {{weatherData?.main?.humidity}}%
-          </div>
-      </div>
-  
-      <div class="info-block">
-          <div class="info-block-label">
-          <img src="../assets/wind.png">
-          <span>wind</span>
-          </div>
-          <div class="info-block-value">
-          {{weatherData?.wind?.speed}} mph
-          </div>
-      </div>
-      </div>
-  </div>
-</div>
+        </div>
 
-<router-outlet></router-outlet>
+        <div class="header-status" aria-label="Current dashboard status">
+          <span class="live-dot"></span>
+          <div>
+            <strong>{{ headerLocation }}</strong>
+            <small>{{ headerCondition | titlecase }}</small>
+          </div>
+        </div>
+      </div>
+
+      <nav class="top-actions" aria-label="Weather controls">
+        <button class="premium-action" type="button" (click)="onUseMyLocation()">
+          <i class="fa-solid fa-location-crosshairs"></i>
+          <span>Local</span>
+        </button>
+        <button class="icon-button" type="button" (click)="toggleTheme()" [attr.aria-label]="themeLabel" [title]="themeLabel">
+          <i class="fa-solid" [ngClass]="themeMode === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+        </button>
+        <button class="unit-toggle" type="button" (click)="toggleUnit()" aria-label="Toggle temperature unit">
+          <span [class.active]="unit === 'imperial'">°F</span>
+          <span [class.active]="unit === 'metric'">°C</span>
+        </button>
+      </nav>
+    </header>
+
+    <section class="command-center" aria-label="Location search">
+      <form class="search-form" (ngSubmit)="onSubmit()">
+        <label class="search-label" for="city-search">Location</label>
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            id="city-search"
+            type="search"
+            name="city"
+            [(ngModel)]="cityName"
+            (ngModelChange)="onSearchInput($event)"
+            (keydown)="onSearchKeydown($event)"
+            placeholder="Search city, region, or landmark"
+            autocomplete="off"
+            aria-describedby="search-help"
+          />
+          <button type="submit">Search</button>
+        </div>
+        <p id="search-help" class="sr-only">Type at least two characters to show location suggestions.</p>
+      </form>
+
+      <div class="suggestions" *ngIf="suggestions.length || suggestionsLoading || showNoSuggestionState" role="listbox" aria-label="Location suggestions">
+        <button
+          *ngFor="let suggestion of suggestions"
+          type="button"
+          class="suggestion-item"
+          [class.active]="suggestions[activeSuggestionIndex] === suggestion"
+          (click)="onSuggestionSelect(suggestion)"
+          role="option">
+          <span>{{ locationLabel(suggestion) }}</span>
+          <small>{{ suggestion.lat | number:'1.2-2' }}, {{ suggestion.lon | number:'1.2-2' }}</small>
+        </button>
+        <div class="suggestion-item muted" *ngIf="suggestionsLoading">Finding matching places...</div>
+        <button class="suggestion-item query-suggestion" type="button" *ngIf="showNoSuggestionState" (click)="searchTypedLocation()" role="option">
+          <span>Search for “{{ searchQuery }}”</span>
+          <small>Use exact city name</small>
+        </button>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="ghost-button" (click)="onUseMyLocation()">
+          <i class="fa-solid fa-location-crosshairs"></i>
+          Use my location
+        </button>
+        <button type="button" class="ghost-button" (click)="retry()" *ngIf="errorMessage">
+          <i class="fa-solid fa-rotate-right"></i>
+          Retry
+        </button>
+      </div>
+
+      <div class="saved-rail" *ngIf="favorites.length">
+        <section *ngIf="favorites.length" aria-label="Favorite locations">
+          <div class="rail-heading">
+            <i class="fa-solid fa-star"></i>
+            Favorites
+            <button type="button" class="text-action" (click)="toggleFavoritesManager()">
+              {{ favoritesManaging ? 'Done' : 'Manage' }}
+            </button>
+          </div>
+          <div class="chip-row">
+            <button class="location-chip" type="button" *ngFor="let item of favorites; trackBy: trackByLocation" (click)="onSavedLocationSelect(item)">
+              {{ item.name }}<span *ngIf="item.country">, {{ item.country }}</span>
+            </button>
+          </div>
+          <div class="favorites-manager" *ngIf="favoritesManaging">
+            <div class="favorite-row" *ngFor="let item of favorites; let i = index; trackBy: trackByLocation">
+              <span>{{ item.name }}<small *ngIf="item.country">, {{ item.country }}</small></span>
+              <div>
+                <button type="button" class="mini-button" (click)="moveFavorite(item, -1)" [disabled]="i === 0" aria-label="Move favorite up">
+                  <i class="fa-solid fa-arrow-up"></i>
+                </button>
+                <button type="button" class="mini-button" (click)="moveFavorite(item, 1)" [disabled]="i === favorites.length - 1" aria-label="Move favorite down">
+                  <i class="fa-solid fa-arrow-down"></i>
+                </button>
+                <button type="button" class="mini-button" (click)="renameFavorite(item)" aria-label="Rename favorite">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button type="button" class="mini-button danger" (click)="removeFavorite(item)" aria-label="Remove favorite">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </section>
+
+    <section class="status-message error-panel" *ngIf="errorMessage && !loading" role="alert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>{{ errorMessage }}</span>
+    </section>
+
+    <section class="skeleton-grid" *ngIf="loading" aria-label="Loading weather dashboard">
+      <div class="skeleton hero-skeleton"></div>
+      <div class="skeleton" *ngFor="let card of skeletonCards"></div>
+    </section>
+
+    <section *ngIf="hasDashboard" class="dashboard-grid" aria-label="Weather dashboard">
+      <article class="hero-card panel">
+        <div class="hero-copy">
+          <div class="hero-topline">
+            <span class="eyebrow">Current conditions</span>
+            <button type="button" class="favorite-button" (click)="toggleFavorite()" [attr.aria-pressed]="isFavorite" [title]="isFavorite ? 'Remove favorite' : 'Save favorite'">
+              <i class="fa-solid fa-star"></i>
+            </button>
+          </div>
+
+          <h2>{{ weatherData?.name }}<span *ngIf="weatherData?.sys?.country">, {{ weatherData?.sys?.country }}</span></h2>
+          <p class="condition">{{ currentWeather?.description | titlecase }}</p>
+
+          <div class="temperature-row">
+            <strong>{{ formatTemp(weatherData?.main?.temp) }}</strong>
+            <span>Feels like {{ formatTemp(weatherData?.main?.feels_like) }}</span>
+          </div>
+
+          <div class="hero-metrics">
+            <div>
+              <span>Local time</span>
+              <strong>{{ localTime }}</strong>
+            </div>
+            <div>
+              <span>Rain chance</span>
+              <strong>{{ nextRainChance }}%</strong>
+            </div>
+            <div>
+              <span>Air quality</span>
+              <strong>{{ aqiLabel }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="weather-orb">
+          <span class="orb-ring ring-one" aria-hidden="true"></span>
+          <span class="orb-ring ring-two" aria-hidden="true"></span>
+          <i class="fa-solid weather-symbol" [ngClass]="weatherIconClass(currentWeather?.icon, currentWeather?.main)" aria-hidden="true"></i>
+          <span>{{ currentWeather?.main }}</span>
+        </div>
+      </article>
+
+      <article class="briefing-card panel">
+        <span class="eyebrow">Smart briefing</span>
+        <h3>{{ insight }}</h3>
+        <div class="decision-grid" aria-label="Planning scores">
+          <div>
+            <span>Comfort</span>
+            <strong>{{ comfortScore }}</strong>
+          </div>
+          <div>
+            <span>Commute</span>
+            <strong>{{ commuteRisk }}</strong>
+          </div>
+          <div>
+            <span>Outdoor</span>
+            <strong>{{ outdoorScore }}</strong>
+          </div>
+        </div>
+        <div class="progress-block">
+          <div class="progress-label">
+            <span>Daylight progress</span>
+            <strong>{{ dayProgress }}%</strong>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="dayProgress"></div>
+          </div>
+          <small>{{ daylightDuration }} of daylight · sunrise {{ formattedSunrise }} · sunset {{ formattedSunset }}</small>
+        </div>
+      </article>
+
+      <article class="metrics-panel panel">
+        <div class="section-heading">
+          <span class="eyebrow">Atmosphere</span>
+          <h3>Live details</h3>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-card">
+            <i class="fa-solid fa-wind"></i>
+            <span>Wind</span>
+            <strong>{{ weatherData?.wind?.speed | number:'1.0-1' }} {{ windUnit }}</strong>
+            <small>{{ windDirection }}<span *ngIf="weatherData?.wind?.gust"> · gust {{ weatherData?.wind?.gust | number:'1.0-1' }} {{ windUnit }}</span></small>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-droplet"></i>
+            <span>Humidity</span>
+            <strong>{{ weatherData?.main?.humidity }}%</strong>
+            <small>Moisture level</small>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-gauge-high"></i>
+            <span>Pressure</span>
+            <strong>{{ weatherData?.main?.pressure }} hPa</strong>
+            <small *ngIf="weatherData?.main?.sea_level">Sea {{ weatherData?.main?.sea_level }} hPa</small>
+            <small *ngIf="!weatherData?.main?.sea_level">Atmospheric pressure</small>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-eye"></i>
+            <span>Visibility</span>
+            <strong>{{ visibility }}</strong>
+            <small>Observed distance</small>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-cloud-rain"></i>
+            <span>Precipitation</span>
+            <strong>{{ rainVolume }}</strong>
+            <small>Recent rain or snow</small>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-cloud"></i>
+            <span>Cloud cover</span>
+            <strong>{{ weatherData?.clouds?.all ?? 0 }}%</strong>
+            <small>Sky coverage</small>
+          </div>
+        </div>
+      </article>
+
+      <article class="map-card panel">
+        <div class="section-heading">
+          <span class="eyebrow">Map intelligence</span>
+          <h3>Location context</h3>
+        </div>
+        <div class="map-frame">
+          <iframe [src]="mapEmbedUrl" title="Location map" loading="lazy"></iframe>
+        </div>
+        <div class="location-grid">
+          <span>Coordinates <strong>{{ coordinateLabel }}</strong></span>
+          <span>Timezone <strong>{{ timezoneLabel }}</strong></span>
+        </div>
+      </article>
+
+      <article class="chart-card panel" *ngIf="chartReady">
+        <div class="section-heading">
+          <span class="eyebrow">Next 36 hours</span>
+          <h3>Temperature and precipitation trend</h3>
+        </div>
+        <div class="chart-frame">
+          <canvas baseChart [data]="hourlyChartData" [options]="hourlyChartOptions" [type]="'line'"></canvas>
+        </div>
+      </article>
+
+      <article class="hourly-card panel" *ngIf="hourlyForecast.length">
+        <div class="section-heading">
+          <span class="eyebrow">Hourly</span>
+          <h3>Short-range plan</h3>
+        </div>
+        <div class="planning-strip">
+          <i class="fa-solid fa-person-walking"></i>
+          <span>{{ bestOutdoorWindow }}</span>
+        </div>
+        <div class="hourly-strip">
+          <button class="hour-card" type="button" *ngFor="let hour of hourlyForecast; trackBy: trackByHour" (click)="selectHourDetail(hour)">
+            <span>{{ hour.time }}</span>
+            <i class="fa-solid forecast-symbol" [ngClass]="weatherIconClass(hour.icon, hour.description)" aria-hidden="true"></i>
+            <strong>{{ formatTemp(hour.temp) }}</strong>
+            <small>{{ hour.rainChance }}% rain · {{ hour.windSpeed | number:'1.0-0' }} {{ windUnit }}</small>
+          </button>
+        </div>
+      </article>
+
+      <article class="forecast-card panel" *ngIf="forecast.length">
+        <div class="section-heading">
+          <span class="eyebrow">5-day forecast</span>
+          <h3>Extended outlook</h3>
+        </div>
+        <div class="forecast-list">
+          <button class="forecast-item" type="button" *ngFor="let day of forecast; trackBy: trackByForecastDay" (click)="selectDayDetail(day)">
+            <span class="forecast-day">{{ day.dayName }}</span>
+            <i class="fa-solid forecast-symbol" [ngClass]="weatherIconClass(day.icon, day.description)" aria-hidden="true"></i>
+            <div>
+              <strong>{{ formatTemp(day.tempMax) }} / {{ formatTemp(day.tempMin) }}</strong>
+              <small>{{ day.description | titlecase }}</small>
+            </div>
+            <span class="rain-pill">{{ day.rainChance }}%</span>
+          </button>
+        </div>
+      </article>
+
+      <article class="air-card panel">
+        <div class="section-heading">
+          <span class="eyebrow">Air quality</span>
+          <h3>Pollution snapshot</h3>
+        </div>
+        <div class="aqi-meter" [ngClass]="aqiTone">
+          <strong>{{ airQuality?.main?.aqi || '--' }}</strong>
+          <span>{{ aqiLabel }}</span>
+        </div>
+        <div class="pollutants" *ngIf="airQuality; else noAqi">
+          <span>PM2.5 <strong>{{ airQuality.components.pm2_5 | number:'1.0-1' }}</strong></span>
+          <span>PM10 <strong>{{ airQuality.components.pm10 | number:'1.0-1' }}</strong></span>
+          <span>O3 <strong>{{ airQuality.components.o3 | number:'1.0-1' }}</strong></span>
+          <span>NO2 <strong>{{ airQuality.components.no2 | number:'1.0-1' }}</strong></span>
+        </div>
+        <ng-template #noAqi>
+          <p class="empty-note">Air quality is not available for this provider or location.</p>
+        </ng-template>
+      </article>
+    </section>
+
+    <div class="detail-backdrop" *ngIf="selectedDetail" (click)="closeDetail()"></div>
+    <aside class="detail-drawer panel" *ngIf="selectedDetail" role="dialog" aria-modal="true" aria-label="Forecast details">
+      <button type="button" class="drawer-close" (click)="closeDetail()" aria-label="Close forecast detail">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <span class="eyebrow">{{ selectedDetail.subtitle }}</span>
+      <div class="drawer-title">
+        <i class="fa-solid forecast-symbol" [ngClass]="weatherIconClass(selectedDetail.icon, selectedDetail.description)" aria-hidden="true"></i>
+        <div>
+          <h3>{{ selectedDetail.title }}</h3>
+          <p>{{ selectedDetail.description | titlecase }}</p>
+        </div>
+      </div>
+      <strong class="drawer-temp">{{ selectedDetail.temp }}</strong>
+      <div class="drawer-grid">
+        <span>Feels like <strong>{{ selectedDetail.feelsLike || selectedDetail.temp }}</strong></span>
+        <span>Rain <strong>{{ selectedDetail.rainChance }}%</strong></span>
+        <span>Wind <strong>{{ selectedDetail.wind }}</strong></span>
+        <span>Humidity <strong>{{ selectedDetail.humidity }}%</strong></span>
+        <span *ngIf="selectedDetail.pressure">Pressure <strong>{{ selectedDetail.pressure }}</strong></span>
+        <span *ngIf="selectedDetail.visibility">Visibility <strong>{{ selectedDetail.visibility }}</strong></span>
+      </div>
+    </aside>
+  </div>
+</main>

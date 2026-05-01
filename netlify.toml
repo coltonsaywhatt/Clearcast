@@ -1,0 +1,9 @@
+[build]
+  command = "WEATHER_API_PROXY_URL=/.netlify/functions/weather npm run build"
+  publish = "dist/weather-app"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
