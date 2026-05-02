@@ -4,17 +4,14 @@ const dotenv = require('dotenv');
 
 const rootDir = path.resolve(__dirname, '..');
 const envPath = path.join(rootDir, '.env');
-const envExamplePath = path.join(rootDir, '.env.example');
+const usingLocalEnv = fs.existsSync(envPath);
 
-if (!fs.existsSync(envPath)) {
-  console.error(`Missing .env file. Copy ${envExamplePath} to .env and add your API key.`);
-  process.exit(1);
-}
-
-const result = dotenv.config({ path: envPath });
-if (result.error) {
-  console.error('Failed to load .env:', result.error);
-  process.exit(1);
+if (usingLocalEnv) {
+  const result = dotenv.config({ path: envPath });
+  if (result.error) {
+    console.error('Failed to load .env:', result.error);
+    process.exit(1);
+  }
 }
 
 const requiredKeys = [
@@ -60,4 +57,4 @@ const generateFile = (filename, production) => {
 
 generateFile('generated.environment.ts', false);
 generateFile('generated.environment.prod.ts', true);
-console.log('Generated environment files from .env successfully.');
+console.log(`Generated environment files from ${usingLocalEnv ? '.env' : 'process environment'} successfully.`);
