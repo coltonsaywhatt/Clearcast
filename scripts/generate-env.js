@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 
 const rootDir = path.resolve(__dirname, '..');
 const envPath = path.join(rootDir, '.env');
+const envExamplePath = path.join(rootDir, '.env.example');
 const usingLocalEnv = fs.existsSync(envPath);
 
 if (usingLocalEnv) {
@@ -12,6 +13,8 @@ if (usingLocalEnv) {
     console.error('Failed to load .env:', result.error);
     process.exit(1);
   }
+} else if (fs.existsSync(envExamplePath)) {
+  dotenv.config({ path: envExamplePath });
 }
 
 const requiredKeys = [
@@ -57,4 +60,4 @@ const generateFile = (filename, production) => {
 
 generateFile('generated.environment.ts', false);
 generateFile('generated.environment.prod.ts', true);
-console.log(`Generated environment files from ${usingLocalEnv ? '.env' : 'process environment'} successfully.`);
+console.log(`Generated environment files from ${usingLocalEnv ? '.env' : 'process environment or .env.example'} successfully.`);
