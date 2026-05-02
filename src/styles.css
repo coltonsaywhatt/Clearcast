@@ -3,35 +3,35 @@
 :root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --bg: #060b12;
-  --surface: rgba(8, 15, 26, 0.74);
-  --surface-strong: rgba(11, 20, 34, 0.92);
-  --surface-soft: rgba(244, 247, 251, 0.07);
-  --line: rgba(210, 224, 241, 0.13);
-  --line-strong: rgba(210, 224, 241, 0.22);
-  --text: #f4f7fb;
-  --muted: #9fb0c3;
-  --accent: #35e0bd;
-  --accent-2: #75a7ff;
-  --accent-3: #f6c177;
-  --danger: #ff6f91;
-  --shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+  --bg: #050b10;
+  --surface: rgba(9, 18, 27, 0.78);
+  --surface-strong: rgba(13, 25, 37, 0.94);
+  --surface-soft: rgba(230, 241, 245, 0.075);
+  --line: rgba(181, 205, 213, 0.14);
+  --line-strong: rgba(181, 205, 213, 0.24);
+  --text: #f3f8f9;
+  --muted: #9eb3bd;
+  --accent: #4fd1c5;
+  --accent-2: #8aa8ff;
+  --accent-3: #ffb86b;
+  --danger: #ff6b8f;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
 }
 
 body.light-theme {
   color-scheme: light;
-  --bg: #f4f8fb;
-  --surface: rgba(255, 255, 255, 0.76);
-  --surface-strong: rgba(255, 255, 255, 0.94);
-  --surface-soft: rgba(12, 24, 38, 0.055);
-  --line: rgba(12, 24, 38, 0.11);
-  --line-strong: rgba(12, 24, 38, 0.17);
-  --text: #101a27;
-  --muted: #627084;
-  --accent: #0aa985;
-  --accent-2: #386bd9;
-  --accent-3: #b66d18;
-  --shadow: 0 24px 64px rgba(45, 63, 86, 0.14);
+  --bg: #eef6f7;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: rgba(255, 255, 255, 0.95);
+  --surface-soft: rgba(23, 40, 52, 0.06);
+  --line: rgba(23, 40, 52, 0.11);
+  --line-strong: rgba(23, 40, 52, 0.18);
+  --text: #17232d;
+  --muted: #60727d;
+  --accent: #0f9f97;
+  --accent-2: #4c63c7;
+  --accent-3: #c66d2d;
+  --shadow: 0 24px 64px rgba(32, 58, 72, 0.16);
 }
 
 * {
@@ -1388,13 +1388,13 @@ body.light-theme .theme-mist .atmosphere {
 
 /* Atmosphere X skin: organic weather cockpit */
 :root {
-  --electric: #9ad8ff;
-  --plasma: #9b7cff;
-  --lime: #69f0c2;
-  --ember: #ffc86b;
-  --void: #030711;
-  --glass: rgba(13, 18, 26, 0.58);
-  --glass-hot: rgba(255, 255, 255, 0.095);
+  --electric: #8aa8ff;
+  --plasma: #b68cff;
+  --lime: #4fd1c5;
+  --ember: #ffb86b;
+  --void: #050b10;
+  --glass: rgba(11, 21, 31, 0.62);
+  --glass-hot: rgba(245, 252, 255, 0.09);
   --halo: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 30px 90px rgba(0, 0, 0, 0.36);
 }
 
@@ -2204,5 +2204,687 @@ body.light-theme {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Final product polish: sharper density, clearer state, and sturdier responsive behavior. */
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.top-bar,
+.command-center,
+.panel {
+  overflow-wrap: normal;
+}
+
+.brand h1,
+.hero-card h2,
+.briefing-card h3,
+.section-heading h3 {
+  overflow-wrap: normal;
+  text-wrap: balance;
+}
+
+.header-status,
+.hero-metrics div,
+.metric-card,
+.pollutants span,
+.drawer-grid span {
+  overflow-wrap: anywhere;
+}
+
+.top-actions {
+  min-width: max-content;
+}
+
+.premium-action,
+.icon-button,
+.unit-toggle,
+.ghost-button,
+.search-box button,
+.location-chip,
+.text-action,
+.mini-button,
+.favorite-button,
+.suggestion-item,
+.hour-card,
+.forecast-item {
+  will-change: transform;
+}
+
+.premium-action:active,
+.icon-button:active,
+.ghost-button:active,
+.search-box button:active,
+.location-chip:active,
+.hour-card:active,
+.forecast-item:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.alerts-panel {
+  grid-column: span 12;
+  margin-bottom: 20px;
+}
+
+.alerts-panel .section-heading {
+  display: block;
+}
+
+.alert-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.alert-item {
+  display: grid;
+  grid-template-columns: minmax(92px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 24%, var(--line));
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--danger) 13%, transparent), transparent 46%),
+    var(--surface-soft);
+  color: var(--text);
+}
+
+.alert-severity {
+  justify-self: start;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: var(--danger);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.alert-item strong,
+.alert-item small {
+  display: block;
+}
+
+.alert-item small {
+  margin-top: 3px;
+  color: var(--muted);
+}
+
+.alerts-panel .empty-note {
+  margin: 14px 0 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.search-box input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.hourly-strip {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent-2) 55%, transparent) transparent;
+}
+
+.hourly-strip::-webkit-scrollbar {
+  height: 8px;
+}
+
+.hourly-strip::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-2) 55%, transparent);
+}
+
+.chart-frame canvas {
+  max-width: 100%;
+}
+
+body.light-theme .panel,
+body.light-theme .top-bar,
+body.light-theme .command-center,
+body.light-theme .error-panel {
+  backdrop-filter: blur(22px) saturate(132%);
+}
+
+body.light-theme .weather-symbol {
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,0.64), transparent 26%),
+    linear-gradient(145deg, color-mix(in srgb, var(--accent-3) 20%, white), color-mix(in srgb, var(--accent-2) 14%, white));
+}
+
+@media (max-width: 960px) {
+  .brand-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .top-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .top-actions {
+    justify-self: stretch;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .command-center {
+    grid-template-columns: 1fr;
+    border-radius: 18px;
+    clip-path: none;
+  }
+
+  .action-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .content-wrapper {
+    width: min(100% - 16px, 1320px);
+  }
+
+  .brand {
+    align-items: flex-start;
+  }
+
+  .brand-mark,
+  .icon-button {
+    width: 46px;
+    height: 46px;
+  }
+
+  .top-actions {
+    grid-template-columns: 1fr 46px;
+  }
+
+  .unit-toggle {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .hero-card h2 {
+    font-size: clamp(2.65rem, 15vw, 4.3rem);
+  }
+
+  .hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .weather-orb {
+    width: min(100%, 300px);
+    justify-self: center;
+  }
+
+  .temperature-row strong {
+    font-size: clamp(3.5rem, 18vw, 5.4rem);
+  }
+
+  .hero-metrics div,
+  .metric-card,
+  .hour-card,
+  .forecast-item,
+  .alert-item {
+    border-radius: 12px;
+  }
+
+  .forecast-item {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+
+  .forecast-item .forecast-symbol {
+    grid-row: span 2;
+    justify-self: end;
+  }
+
+  .forecast-item > div {
+    grid-column: 1 / -1;
+  }
+
+  .forecast-item .rain-pill {
+    grid-column: 1;
+  }
+
+  .alert-item {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Desktop review fixes: broader briefing copy, full-width AQI, and a more distinctive weather-map stage. */
+.app-shell {
+  background:
+    linear-gradient(115deg, rgba(39, 216, 191, 0.08), transparent 28%),
+    linear-gradient(245deg, rgba(102, 149, 255, 0.13), transparent 34%),
+    linear-gradient(180deg, #07111d 0%, #03070d 100%);
+}
+
+.theme-clear .atmosphere,
+.theme-cloudy .atmosphere,
+.theme-mist .atmosphere,
+.theme-rain .atmosphere,
+.theme-snow .atmosphere,
+.theme-storm .atmosphere {
+  background:
+    conic-gradient(from 220deg at 12% 28%, transparent 0 52deg, rgba(73, 224, 199, 0.16) 64deg, transparent 86deg 360deg),
+    conic-gradient(from 34deg at 88% 18%, transparent 0 42deg, rgba(106, 154, 255, 0.18) 58deg, transparent 84deg 360deg),
+    repeating-radial-gradient(ellipse at 18% 74%, rgba(246, 193, 119, 0.15) 0 1px, transparent 1px 72px),
+    repeating-radial-gradient(ellipse at 78% 42%, rgba(154, 216, 255, 0.14) 0 1px, transparent 1px 86px),
+    linear-gradient(180deg, #0b1d2e 0%, #04101b 48%, #02060c 100%);
+}
+
+.app-shell::before {
+  inset: -20%;
+  background:
+    conic-gradient(from 308deg at 58% 40%, transparent 0 68deg, rgba(105, 240, 194, 0.18) 72deg, rgba(154, 216, 255, 0.09) 78deg, transparent 86deg 360deg),
+    repeating-conic-gradient(from 12deg at 58% 40%, rgba(154, 216, 255, 0.09) 0 1deg, transparent 1deg 18deg),
+    repeating-radial-gradient(circle at 58% 40%, transparent 0 112px, rgba(154, 216, 255, 0.12) 113px 114px, transparent 115px 225px);
+  filter: blur(0) saturate(130%);
+  opacity: 0.68;
+  animation: radar-sweep 18s linear infinite;
+}
+
+.app-shell::after {
+  inset: 0;
+  background:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(128deg, transparent 0 46%, rgba(117, 167, 255, 0.08) 46.2% 46.4%, transparent 46.8%),
+    linear-gradient(18deg, transparent 0 58%, rgba(246, 193, 119, 0.07) 58.2% 58.4%, transparent 58.8%);
+  background-size: 46px 46px, 46px 46px, 100% 100%, 100% 100%;
+  mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 100%);
+  opacity: 0.7;
+}
+
+.sky-noise {
+  background:
+    radial-gradient(circle at 16% 20%, rgba(255,255,255,0.2) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72% 34%, rgba(154,216,255,0.18) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 42% 78%, rgba(255,200,107,0.13) 0 1px, transparent 1.5px);
+  background-size: 260px 230px, 340px 310px, 230px 280px;
+  opacity: 0.38;
+}
+
+.orbit-field span {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.briefing-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.briefing-card h3 {
+  max-width: none;
+  font-size: clamp(2.15rem, 3.25vw, 3.55rem);
+  line-height: 1.06;
+}
+
+.decision-grid {
+  margin-top: clamp(24px, 3vw, 38px);
+}
+
+.command-center .action-row {
+  align-self: end;
+  min-height: 60px;
+}
+
+.command-center .action-row .ghost-button {
+  min-height: 60px;
+  padding-inline: 24px;
+}
+
+.air-card {
+  grid-column: span 12;
+  display: grid;
+  grid-template-columns: minmax(290px, 0.48fr) minmax(220px, 0.34fr) minmax(360px, 1fr);
+  align-items: stretch;
+  gap: 18px;
+}
+
+.air-card .section-heading {
+  align-self: center;
+  display: block;
+}
+
+.air-card .eyebrow {
+  white-space: nowrap;
+}
+
+.air-card .aqi-meter,
+.air-card .pollutants {
+  margin-top: 0;
+}
+
+.air-card .pollutants {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-self: stretch;
+}
+
+.air-card .pollutants span {
+  min-height: 72px;
+  padding: 14px 16px;
+}
+
+@keyframes radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1180px) {
+  .air-card {
+    grid-template-columns: minmax(180px, 0.7fr) minmax(260px, 1fr);
+  }
+
+  .air-card .section-heading {
+    grid-column: 1 / -1;
+  }
+
+  .air-card .pollutants {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .briefing-card h3 {
+    font-size: clamp(2rem, 10vw, 3.2rem);
+  }
+
+  .air-card {
+    display: block;
+  }
+
+  .air-card .aqi-meter {
+    margin-top: 18px;
+  }
+
+  .air-card .pollutants {
+    grid-template-columns: 1fr;
+    margin-top: 14px;
+  }
+}
+
+/* Latest desktop review adjustments. */
+.top-bar .brand {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.top-bar .brand-mark {
+  flex: 0 0 auto;
+}
+
+.top-bar .brand-mark {
+  width: 50px;
+  height: 50px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent);
+  animation: none;
+}
+
+.top-bar .brand-mark::after {
+  display: none;
+}
+
+.top-bar .brand-mark img {
+  display: block;
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgba(53, 224, 189, 0.18));
+}
+
+.metrics-panel {
+  align-self: start;
+  padding-bottom: 18px;
+}
+
+.metrics-panel .metric-grid {
+  margin-top: 16px;
+  align-items: stretch;
+}
+
+.metrics-panel .metric-card {
+  min-height: 0;
+  padding: 16px;
+}
+
+.location-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .metrics-panel {
+    padding-bottom: 14px;
+  }
+
+  .metrics-panel .metric-grid {
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .metrics-panel .metric-card {
+    min-height: 0;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 560px) {
+  .location-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Palette refresh: colder ink base, teal primary action, violet data accent, amber warmth. */
+.app-shell {
+  background:
+    radial-gradient(circle at 10% 18%, rgba(79, 209, 197, 0.13), transparent 28%),
+    radial-gradient(circle at 88% 10%, rgba(138, 168, 255, 0.14), transparent 31%),
+    radial-gradient(circle at 72% 76%, rgba(255, 184, 107, 0.08), transparent 34%),
+    linear-gradient(180deg, #06121a 0%, #050b10 58%, #020609 100%);
+}
+
+.theme-clear .atmosphere,
+.theme-cloudy .atmosphere,
+.theme-mist .atmosphere,
+.theme-rain .atmosphere,
+.theme-snow .atmosphere,
+.theme-storm .atmosphere {
+  background:
+    conic-gradient(from 218deg at 12% 28%, transparent 0 52deg, rgba(79, 209, 197, 0.18) 64deg, transparent 86deg 360deg),
+    conic-gradient(from 34deg at 88% 18%, transparent 0 42deg, rgba(138, 168, 255, 0.16) 58deg, transparent 84deg 360deg),
+    repeating-radial-gradient(ellipse at 18% 74%, rgba(255, 184, 107, 0.13) 0 1px, transparent 1px 76px),
+    repeating-radial-gradient(ellipse at 78% 42%, rgba(182, 140, 255, 0.1) 0 1px, transparent 1px 90px),
+    linear-gradient(180deg, #0a1b25 0%, #06121a 48%, #020609 100%);
+}
+
+.panel,
+.top-bar,
+.command-center,
+.error-panel {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.105), transparent 42%),
+    linear-gradient(160deg, rgba(11, 21, 31, 0.66), color-mix(in srgb, var(--surface) 70%, transparent));
+  border-color: color-mix(in srgb, var(--line-strong) 72%, rgba(79, 209, 197, 0.12));
+}
+
+.premium-action,
+.search-box button {
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255,255,255,0.48), transparent 30%),
+    linear-gradient(135deg, #4fd1c5, #8aa8ff);
+  color: #061016;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.2),
+    0 18px 42px rgba(79, 209, 197, 0.18);
+}
+
+.header-glow,
+.progress-fill {
+  background: linear-gradient(90deg, #ffb86b, #4fd1c5 52%, #8aa8ff);
+}
+
+.metric-card {
+  border-left-color: rgba(79, 209, 197, 0.72);
+}
+
+.metric-card i,
+.forecast-symbol {
+  background: linear-gradient(135deg, #4fd1c5, #8aa8ff);
+  color: #061016;
+}
+
+.weather-symbol,
+body.light-theme .weather-symbol {
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,0.34), transparent 26%),
+    linear-gradient(145deg, rgba(255, 184, 107, 0.26), rgba(138, 168, 255, 0.18));
+}
+
+.rain-pill {
+  background: rgba(138, 168, 255, 0.16);
+  color: #adc0ff;
+}
+
+.aqi-meter.fair {
+  color: #d7c86f;
+}
+
+body.light-theme .app-shell {
+  background:
+    radial-gradient(circle at 8% 18%, rgba(15, 159, 151, 0.13), transparent 30%),
+    radial-gradient(circle at 88% 8%, rgba(76, 99, 199, 0.11), transparent 34%),
+    linear-gradient(180deg, #eef6f7 0%, #dfecef 100%);
+}
+
+/* Hourly forecast rail refresh. */
+.hourly-card {
+  padding-bottom: 18px;
+}
+
+.hourly-card .section-heading {
+  align-items: end;
+}
+
+.planning-strip {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background:
+    linear-gradient(90deg, rgba(79, 209, 197, 0.12), transparent 48%),
+    color-mix(in srgb, var(--surface-soft) 86%, transparent);
+}
+
+.planning-strip i {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(79, 209, 197, 0.14);
+}
+
+.hourly-strip {
+  grid-auto-columns: minmax(170px, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+  padding: 2px 4px 12px;
+}
+
+.hour-card {
+  grid-template-rows: auto auto auto;
+  justify-items: stretch;
+  gap: 12px;
+  min-height: 134px;
+  padding: 14px;
+  text-align: left;
+  clip-path: none;
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025)),
+    color-mix(in srgb, var(--surface-soft) 92%, transparent);
+}
+
+.hour-card:hover {
+  background:
+    linear-gradient(145deg, rgba(79, 209, 197, 0.14), rgba(138, 168, 255, 0.08)),
+    color-mix(in srgb, var(--surface-soft) 94%, transparent);
+}
+
+.hour-time {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hour-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hour-main .forecast-symbol {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  font-size: 1.25rem;
+}
+
+.hour-main strong {
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  line-height: 1;
+}
+
+.hour-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hour-meta small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.055);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.hour-meta i {
+  color: var(--accent);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 760px) {
+  .hourly-strip {
+    grid-auto-columns: minmax(154px, 78vw);
+  }
+
+  .hour-card {
+    min-height: 126px;
   }
 }

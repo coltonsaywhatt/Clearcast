@@ -1,7 +1,7 @@
 {
-  "name": "SkySense Weather Command",
-  "short_name": "SkySense",
-  "description": "Premium weather command dashboard with forecasts, air quality, alerts, and planning intelligence.",
+  "name": "Clearcast",
+  "short_name": "Clearcast",
+  "description": "Live conditions, forecasts, air quality, and planning guidance in one calm daily weather app.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,9 +9,9 @@
   "theme_color": "#101216",
   "icons": [
     {
-      "src": "assets/icons/skysense-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/weatherlogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

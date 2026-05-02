@@ -324,6 +324,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.themeMode = this.themeMode === 'dark' ? 'light' : 'dark';
     localStorage.setItem('weatherTheme', this.themeMode);
     this.applyTheme();
+    if (this.chartReady) {
+      this.buildHourlyChart();
+    }
   }
 
   retry(): void {
@@ -729,7 +732,9 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.hourlyForecast = response.list.slice(0, 12).map(item => ({
+    const orderedForecast = [...response.list].sort((a, b) => a.dt - b.dt);
+
+    this.hourlyForecast = orderedForecast.slice(0, 12).map(item => ({
       time: formatTime(item.dt, response.city.timezone),
       timestamp: item.dt,
       temp: item.main.temp,
@@ -743,7 +748,7 @@ export class AppComponent implements OnInit, OnDestroy {
       visibility: item.visibility
     }));
 
-    const grouped = response.list.reduce((days, item) => {
+    const grouped = orderedForecast.reduce((days, item) => {
       const dayKey = new Date((item.dt + response.city.timezone) * 1000).toISOString().slice(0, 10);
       days.set(dayKey, [...(days.get(dayKey) ?? []), item]);
       return days;
@@ -752,6 +757,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const todayKey = new Date((Math.floor(Date.now() / 1000) + response.city.timezone) * 1000).toISOString().slice(0, 10);
     this.forecast = Array.from(grouped.entries())
       .filter(([date]) => date !== todayKey)
+      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
       .slice(0, 5)
       .map(([date, items]) => {
         const representative = items.find(item => item.dt_txt?.includes('12:00:00')) ?? items[Math.floor(items.length / 2)] ?? items[0];
@@ -804,14 +810,15 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private buildHourlyChart(): void {
+    const palette = this.chartPalette();
     this.hourlyChartData = {
       labels: this.hourlyForecast.map(item => item.time),
       datasets: [
         {
           label: 'Temperature',
           data: this.hourlyForecast.map(item => item.temp),
-          borderColor: '#38bdf8',
-          backgroundColor: 'rgba(56, 189, 248, 0.18)',
+          borderColor: palette.temperature,
+          backgroundColor: palette.temperatureFill,
           fill: true,
           tension: 0.42,
           pointRadius: 3,
@@ -820,8 +827,8 @@ export class AppComponent implements OnInit, OnDestroy {
         {
           label: 'Rain chance',
           data: this.hourlyForecast.map(item => item.rainChance),
-          borderColor: '#a78bfa',
-          backgroundColor: 'rgba(167, 139, 250, 0.14)',
+          borderColor: palette.rain,
+          backgroundColor: palette.rainFill,
           fill: true,
           tension: 0.42,
           pointRadius: 3,
@@ -829,6 +836,7 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       ]
     };
+    this.applyChartTheme();
     this.chartReady = true;
   }
 
@@ -855,6 +863,61 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private applyTheme(): void {
     document.body.classList.toggle('light-theme', this.themeMode === 'light');
+    this.applyChartTheme();
+  }
+
+  private applyChartTheme(): void {
+    const palette = this.chartPalette();
+    this.hourlyChartOptions = {
+      ...this.hourlyChartOptions,
+      plugins: {
+        ...this.hourlyChartOptions.plugins,
+        legend: {
+          display: true,
+          labels: { color: palette.text, boxWidth: 10, usePointStyle: true }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: palette.muted },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: palette.muted },
+          grid: { color: palette.grid }
+        }
+      }
+    };
+  }
+
+  private chartPalette(): {
+    text: string;
+    muted: string;
+    grid: string;
+    temperature: string;
+    temperatureFill: string;
+    rain: string;
+    rainFill: string;
+  } {
+    return this.themeMode === 'light'
+      ? {
+        text: '#101a27',
+        muted: '#627084',
+        grid: 'rgba(96, 114, 125, 0.18)',
+        temperature: '#0f9f97',
+        temperatureFill: 'rgba(15, 159, 151, 0.16)',
+        rain: '#4c63c7',
+        rainFill: 'rgba(76, 99, 199, 0.13)'
+      }
+      : {
+        text: '#e8f6f7',
+        muted: '#9eb3bd',
+        grid: 'rgba(158, 179, 189, 0.14)',
+        temperature: '#4fd1c5',
+        temperatureFill: 'rgba(79, 209, 197, 0.17)',
+        rain: '#8aa8ff',
+        rainFill: 'rgba(138, 168, 255, 0.13)'
+      };
   }
 
   private readLocations(key: string): SavedLocation[] {

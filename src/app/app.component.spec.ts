@@ -75,11 +75,11 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the premium dashboard brand', () => {
+  it('should render the app brand', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Weather Command');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Clearcast');
   });
 
   it('should map weather icon codes to local symbol classes', () => {

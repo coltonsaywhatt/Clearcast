@@ -10,12 +10,14 @@
     <header class="top-bar">
       <div class="header-glow" aria-hidden="true"></div>
       <div class="brand-wrap">
-        <div class="brand" aria-label="SkySense weather dashboard">
-          <span class="brand-mark"><i class="fa-solid fa-cloud-sun"></i></span>
+        <div class="brand" aria-label="Clearcast app">
+          <span class="brand-mark">
+            <img src="assets/weatherlogo.png" alt="" aria-hidden="true" />
+          </span>
           <div>
-            <span class="brand-kicker">SkySense OS</span>
-            <h1>Weather Command</h1>
-            <p>Operational weather intelligence for the day ahead.</p>
+            <span class="brand-kicker">Daily weather app</span>
+            <h1>Clearcast</h1>
+            <p>Forecasts that plan ahead with live weather, air quality, and timing guidance.</p>
           </div>
         </div>
 
@@ -136,12 +138,28 @@
       <span>{{ errorMessage }}</span>
     </section>
 
-    <section class="skeleton-grid" *ngIf="loading" aria-label="Loading weather dashboard">
+    <section class="alerts-panel panel" *ngIf="!loading && alerts.length" aria-label="Weather alerts">
+      <div class="section-heading">
+        <span class="eyebrow">Weather alerts</span>
+        <h3>Active advisories</h3>
+      </div>
+      <div class="alert-list">
+        <article class="alert-item" *ngFor="let alert of alerts | slice:0:3">
+          <span class="alert-severity">{{ alert.severity }}</span>
+          <div>
+            <strong>{{ alert.title }}</strong>
+            <small>{{ alert.source || alert.type }}</small>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="skeleton-grid" *ngIf="loading" aria-label="Loading Clearcast">
       <div class="skeleton hero-skeleton"></div>
       <div class="skeleton" *ngFor="let card of skeletonCards"></div>
     </section>
 
-    <section *ngIf="hasDashboard" class="dashboard-grid" aria-label="Weather dashboard">
+    <section *ngIf="hasDashboard" class="dashboard-grid" aria-label="Clearcast weather dashboard">
       <article class="hero-card panel">
         <div class="hero-copy">
           <div class="hero-topline">
@@ -294,10 +312,15 @@
         </div>
         <div class="hourly-strip">
           <button class="hour-card" type="button" *ngFor="let hour of hourlyForecast; trackBy: trackByHour" (click)="selectHourDetail(hour)">
-            <span>{{ hour.time }}</span>
-            <i class="fa-solid forecast-symbol" [ngClass]="weatherIconClass(hour.icon, hour.description)" aria-hidden="true"></i>
-            <strong>{{ formatTemp(hour.temp) }}</strong>
-            <small>{{ hour.rainChance }}% rain · {{ hour.windSpeed | number:'1.0-0' }} {{ windUnit }}</small>
+            <span class="hour-time">{{ hour.time }}</span>
+            <span class="hour-main">
+              <i class="fa-solid forecast-symbol" [ngClass]="weatherIconClass(hour.icon, hour.description)" aria-hidden="true"></i>
+              <strong>{{ formatTemp(hour.temp) }}</strong>
+            </span>
+            <span class="hour-meta">
+              <small><i class="fa-solid fa-droplet"></i>{{ hour.rainChance }}%</small>
+              <small><i class="fa-solid fa-wind"></i>{{ hour.windSpeed | number:'1.0-0' }} {{ windUnit }}</small>
+            </span>
           </button>
         </div>
       </article>
