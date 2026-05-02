@@ -18,14 +18,7 @@ if (usingLocalEnv) {
 }
 
 const requiredKeys = [
-  'WEATHER_API_BASE_URL',
-  'WEATHER_FORECAST_API_URL',
-  'WEATHER_AIR_POLLUTION_API_URL',
-  'WEATHER_GEOCODING_API_URL',
-  'WEATHER_API_HOST_HEADER_NAME',
-  'WEATHER_API_HOST_HEADER_VALUE',
-  'WEATHER_API_KEY_HEADER_NAME',
-  'WEATHER_API_KEY_HEADER_VALUE'
+  'WEATHER_API_PROXY_URL'
 ];
 
 const missingKeys = requiredKeys.filter(key => !process.env[key]);
