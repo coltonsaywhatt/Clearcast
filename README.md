@@ -1,166 +1,161 @@
-# SkySense Weather Dashboard
+# Clearcast
 
-Premium Angular weather dashboard powered by the RapidWeather/OpenWeather API surface. It includes current conditions, short-range planning, extended outlooks, air quality, saved locations, and a responsive SaaS-style interface.
+Clearcast is a polished weather dashboard built as a portfolio-grade Angular application. It turns live weather, air quality, hourly forecasts, saved locations, and planning guidance into a responsive app experience with a secure serverless API layer.
 
-## Features
+[Live Demo](https://clearcast-weather.netlify.app) | [Netlify Project](https://app.netlify.com/projects/clearcast-weather)
 
-- Current weather hero with feels-like temperature, condition icon, local time, rain chance, and AQI summary
-- Search by city with geocoding autocomplete when supported by the API provider
-- Keyboard-navigable search suggestions with clear and no-results states
-- Use current browser location
-- Favorite locations persisted in local storage with manage, rename, remove, and reorder controls
-- Fahrenheit/Celsius unit toggle persisted across sessions
-- Dark/light mode toggle persisted across sessions
-- Hourly forecast strip and Chart.js temperature/rain trend
-- Clickable hourly and daily forecast detail drawer
-- 5-day forecast with high/low, humidity, wind, and precipitation chance
-- Wind speed/direction, pressure, humidity, visibility, cloud cover, precipitation, sunrise/sunset, and daylight progress
-- Air quality index and pollutant snapshot when the provider exposes air pollution data
-- Production-ready Netlify function proxy so deployed builds do not expose the RapidAPI key in the browser bundle
-- First-load recovery: browser location, saved favorite, Tampa fallback, then demo-mode fallback if the provider is unavailable
-- Planning scores for comfort, commute risk, and outdoor suitability
-- Mobile bottom action bar for location, save, units, and theme
-- Location intelligence map with coordinates, timezone, and data-source transparency
-- Best outdoor planning window derived from hourly forecast conditions
-- PWA manifest, installable app metadata, service worker shell cache, and cached last-known dashboard restore
-- Loading skeletons, empty states, retryable error states, keyboard-accessible controls, and responsive mobile layout
+## Highlights
+
+- Modern responsive weather dashboard with dark/light themes
+- City search, geolocation lookup, saved locations, and persisted preferences
+- Current conditions, hourly forecast rail, 5-day forecast, AQI, wind, humidity, pressure, visibility, sunrise/sunset, and daylight progress
+- Smart briefing for comfort, commute, outdoor suitability, and best short-range weather window
+- Chart.js trend visualization for temperature and rain chance
+- Interactive detail drawer for hourly and daily forecasts
+- Netlify serverless function proxy so API credentials stay out of the browser bundle
+- PWA metadata, app icon, shell caching, and last-known dashboard recovery
+- Loading, empty, error, and retry states designed for real-world API behavior
 
 ## Tech Stack
 
-- Angular 14
-- RxJS
-- Chart.js with ng2-charts
-- Font Awesome icons
-- dotenv-powered environment generation
-
-## Setup
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Create your local environment file:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Add your RapidAPI key to `.env`:
-
-   ```bash
-   WEATHER_API_KEY_HEADER_VALUE=your_real_api_key
-   ```
-
-4. Start the development server:
-
-   ```bash
-   npm start
-   ```
-
-5. Open `http://localhost:4200/`.
-
-## Environment Variables
-
-The app generates Angular environment files before `npm start` and `npm run build`.
-
-| Variable | Purpose |
+| Area | Tools |
 | --- | --- |
-| `WEATHER_API_PROXY_URL` | Optional browser-facing proxy URL. Use `/.netlify/functions/weather` for Netlify production builds. Leave blank for local direct API calls. |
-| `WEATHER_API_BASE_URL` | Current weather endpoint |
-| `WEATHER_FORECAST_API_URL` | 5-day / 3-hour forecast endpoint |
-| `WEATHER_AIR_POLLUTION_API_URL` | Air pollution endpoint |
-| `WEATHER_GEOCODING_API_URL` | Direct geocoding/autocomplete endpoint |
-| `WEATHER_API_HOST_HEADER_NAME` | RapidAPI host header name |
-| `WEATHER_API_HOST_HEADER_VALUE` | RapidAPI host value |
-| `WEATHER_API_KEY_HEADER_NAME` | RapidAPI key header name |
-| `WEATHER_API_KEY_HEADER_VALUE` | RapidAPI key value |
-
-Real `.env` files and generated Angular environment files are ignored by git. `.env.example` contains safe placeholders only.
-
-When `WEATHER_API_PROXY_URL` is set, the generated Angular environment omits the API key value and the browser calls the proxy instead of RapidAPI directly.
-
-## API Notes
-
-The configured provider uses a RapidAPI proxy for OpenWeather-style endpoints:
-
-- `/data/2.5/weather` for current conditions
-- `/data/2.5/forecast` for 5-day forecasts in 3-hour steps
-- `/data/2.5/air_pollution` for AQI and pollutant components
-- `/geo/1.0/direct` for location search/autocomplete
-
-Some RapidAPI plans/providers may not expose every upstream endpoint. The UI handles missing forecast, autocomplete, and air-quality responses gracefully.
-
-Live radar/weather map layers are not enabled by default because both Xweather Maps and OpenWeather tile layers require separate map/tile credentials. The current map card uses OpenStreetMap for location context and clearly states when radar layers are unavailable.
-
-## Xweather Free/Trial Endpoint Ideas
-
-This project still uses the configured RapidWeather/OpenWeather provider. If you later add Xweather credentials, the highest-value Xweather endpoints to explore on the free developer trial or PWS contributor access are:
-
-- `/conditions` for current conditions from Xweather
-- `/forecasts` for daily/hourly forecast periods
-- `/alerts` and `/alerts/summary` for active severe weather events
-- `/airquality/index`, `/airquality`, and `/airquality/forecasts` for AQI and pollutant forecasts
-- `/lightning` for recent lightning activity where included in your access
-- `/fires` for active fire data and risk workflows
-- `/tropicalcyclones` for active tropical systems
-- `/roadweather` for road-surface condition forecasts
-
-Xweather notes that some endpoints require add-ons or use request multipliers, and the public developer trial is for testing rather than commercial production. Check your Xweather dashboard plan before wiring these into the UI.
-
-## Deployment Notes
-
-This repo includes `netlify.toml`, `netlify/functions/weather.js`, and an optional `netlify/functions/xweather-alerts.js` helper kept for future alert work. Netlify builds set proxy URLs, so client-side code calls serverless functions and API credentials stay in Netlify environment variables.
-
-Required Netlify environment variables are the same as `.env.example`, except proxy URLs are supplied by the build command.
-
-For local production-parity development with the proxy, use Netlify CLI:
-
-```bash
-netlify dev
-```
-
-For regular Angular development, `npm start` still works and calls RapidAPI directly using your local `.env`.
-
-For local production-parity development without Netlify CLI, run:
-
-```bash
-npm run start:proxy
-```
-
-That starts the local Node proxy and Angular dev server with `/api/weather`.
+| Frontend | Angular 14, TypeScript, RxJS |
+| Data visualization | Chart.js, ng2-charts |
+| Styling | Custom CSS, responsive grid layouts, Font Awesome |
+| Runtime config | dotenv-generated app config |
+| Serverless | Netlify Functions |
+| Deployment | Netlify |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Browser["Angular Dashboard"] --> WeatherProxy["Weather Proxy"]
-  WeatherProxy --> RapidAPI["RapidWeather/OpenWeather"]
-  Browser --> LocalStorage["Local Storage Preferences"]
-  Browser --> ServiceWorker["Service Worker Shell Cache"]
+  Browser["Angular app"] --> Proxy["Netlify / local weather proxy"]
+  Proxy --> WeatherAPI["Weather provider API"]
+  Browser --> Storage["LocalStorage preferences + cache"]
+  Browser --> PWA["Manifest + service worker"]
 ```
 
-## PWA Notes
+The Angular app only receives browser-safe proxy URLs. Weather provider endpoints, host headers, and API keys are read by the local proxy or Netlify Functions from environment variables.
 
-The app includes a lightweight custom service worker at `src/sw.js`, a web manifest, and an SVG app icon. It caches the application shell and restores the last successful weather dashboard from local storage when live provider data is unavailable.
+## Local Setup
 
-The app caches the application shell and restores the last successful weather dashboard from local storage when live provider data is unavailable.
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Fill in `.env` with your weather provider values. Keep `.env` private.
+
+Start the app:
+
+```bash
+npm start
+```
+
+Open:
+
+```text
+http://localhost:4200/
+```
+
+`npm start` runs the local Node proxy and Angular dev server together, so API keys stay server-side during development.
+
+## Environment Variables
+
+`.env.example` intentionally contains blank values for provider-specific details. The real values belong in local `.env` and Netlify environment variables.
+
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `WEATHER_API_PROXY_URL` | Browser build | Local or Netlify weather proxy route |
+| `XWEATHER_ALERTS_PROXY_URL` | Browser build | Optional alerts proxy route |
+| `WEATHER_API_BASE_URL` | Proxy/function | Current weather endpoint |
+| `WEATHER_FORECAST_API_URL` | Proxy/function | Forecast endpoint |
+| `WEATHER_AIR_POLLUTION_API_URL` | Proxy/function | Air quality endpoint |
+| `WEATHER_GEOCODING_API_URL` | Proxy/function | Location search endpoint |
+| `WEATHER_API_HOST_HEADER_NAME` | Proxy/function | Provider host header name |
+| `WEATHER_API_HOST_HEADER_VALUE` | Proxy/function | Provider host header value |
+| `WEATHER_API_KEY_HEADER_NAME` | Proxy/function | Provider API key header name |
+| `WEATHER_API_KEY_HEADER_VALUE` | Proxy/function | Provider API key |
+| `XWEATHER_CLIENT_ID` | Optional alerts function | Xweather client ID |
+| `XWEATHER_CLIENT_SECRET` | Optional alerts function | Xweather client secret |
+
+Generated browser config is written to `src/app/app.environment.ts`, which is ignored by git.
 
 ## Scripts
 
 ```bash
-npm start      # generate env files and run Angular dev server
-npm run start:proxy # run Angular through the local API proxy
-npm run build  # generate env files and build production assets
-npm test       # run Karma unit tests
+npm start         # Generate app config, start local proxy, and run Angular
+npm run build     # Generate app config and build production assets
+npm run test      # Run Karma unit tests
+npm run proxy     # Run only the local API proxy
 ```
 
-## Screenshots
+## Deployment
 
-Add screenshots here after deploying or running locally:
+The project is configured for Netlify:
 
-- Desktop dashboard
-- Mobile dashboard
-- Light mode
-- Error/loading state
+- `netlify.toml` sets the build command, publish directory, functions directory, and SPA redirect.
+- `netlify/functions/weather.js` proxies weather API requests.
+- `netlify/functions/xweather-alerts.js` supports optional severe weather alerts.
+
+Production build output:
+
+```text
+dist/weather-app
+```
+
+Required Netlify settings:
+
+- Add the environment variables listed above in the Netlify project settings.
+- Keep `WEATHER_API_KEY_HEADER_VALUE` marked as secret.
+- The browser should only receive proxy URLs, not provider API keys.
+
+## Project Structure
+
+```text
+src/
+  app/
+    models/              Weather, forecast, alert, and location types
+    services/            Weather API client
+    utils/               Weather formatting and scoring helpers
+    app.component.*      Main dashboard UI and behavior
+  assets/                Logo and visual assets
+  main.ts                Angular bootstrap
+  manifest.webmanifest   PWA metadata
+  sw.js                  Lightweight service worker
+
+netlify/
+  functions/             Serverless API proxy handlers
+
+scripts/
+  generate-env.js        Builds browser-safe runtime config
+  dev-proxy.js           Local API proxy
+  start-dev.js           Starts proxy + Angular dev server
+```
+
+## Portfolio Notes
+
+Clearcast was designed to feel like a real consumer weather app rather than a demo page. The project focuses on:
+
+- Secure client/server separation for API credentials
+- Resilient data loading and fallback behavior
+- Dense but readable dashboard layout
+- Responsive interaction patterns for desktop and mobile
+- Practical UX details like saved locations, persisted units/theme, and retryable errors
+
+## Status
+
+Current production URL:
+
+[https://clearcast-weather.netlify.app](https://clearcast-weather.netlify.app)
+
+Live weather data requires valid provider credentials in Netlify environment variables.
