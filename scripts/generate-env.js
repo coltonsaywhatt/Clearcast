@@ -34,7 +34,7 @@ if (missingKeys.length) {
   process.exit(1);
 }
 
-const generatedEnvDir = path.join(rootDir, 'src', 'environments');
+const generatedEnvDir = path.join(rootDir, 'src', 'app');
 if (!fs.existsSync(generatedEnvDir)) {
   fs.mkdirSync(generatedEnvDir, { recursive: true });
 }
@@ -51,13 +51,12 @@ const generateFile = (filename, production) => {
     weatherApiHostHeaderName: process.env.WEATHER_API_HOST_HEADER_NAME,
     weatherApiHostHeaderValue: process.env.WEATHER_API_HOST_HEADER_VALUE,
     weatherApiKeyHeaderName: process.env.WEATHER_API_KEY_HEADER_NAME,
-    weatherApiKeyHeaderValue: process.env.WEATHER_API_PROXY_URL ? '' : process.env.WEATHER_API_KEY_HEADER_VALUE
+    weatherApiKeyHeaderValue: ''
   };
 
   const content = `export const environment = ${JSON.stringify(config, null, 2)};\n`;
   fs.writeFileSync(path.join(generatedEnvDir, filename), content, 'utf8');
 };
 
-generateFile('generated.environment.ts', false);
-generateFile('generated.environment.prod.ts', true);
+generateFile('app.environment.ts', process.env.NODE_ENV === 'production');
 console.log(`Generated environment files from ${usingLocalEnv ? '.env' : 'process environment or .env.example'} successfully.`);

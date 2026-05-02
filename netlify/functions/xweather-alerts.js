@@ -1,3 +1,9 @@
+try {
+  require('dotenv').config();
+} catch {
+  // Netlify provides runtime env vars directly; dotenv is only needed for local function runs.
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return json(405, { message: 'Method not allowed' });

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { environment } from 'src/environments/environment';
+import { environment } from 'src/app/app.environment';
 
 import { WeatherService } from './weather.service';
 
@@ -24,14 +24,14 @@ describe('WeatherService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should request current weather with configured RapidAPI headers', () => {
+  it('should request current weather through the configured API proxy', () => {
     service.getWeatherData('Tampa').subscribe();
 
-    const request = httpMock.expectOne(req => req.url === environment.weatherApiBaseUrl);
+    const request = httpMock.expectOne(req => req.url === environment.weatherApiProxyUrl);
+    expect(request.request.params.get('resource')).toBe('weather');
     expect(request.request.params.get('q')).toBe('Tampa');
     expect(request.request.params.get('units')).toBe('imperial');
-    expect(request.request.headers.get(environment.weatherApiHostHeaderName)).toBe(environment.weatherApiHostHeaderValue);
-    expect(request.request.headers.get(environment.weatherApiKeyHeaderName)).toBe(environment.weatherApiKeyHeaderValue);
+    expect(request.request.headers.has(environment.weatherApiKeyHeaderName)).toBeFalse();
     request.flush({});
   });
 

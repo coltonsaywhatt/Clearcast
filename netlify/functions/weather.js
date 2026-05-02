@@ -1,8 +1,14 @@
+try {
+  require('dotenv').config();
+} catch {
+  // Netlify provides runtime env vars directly; dotenv is only needed for local function runs.
+}
+
 const ENDPOINTS = {
-  weather: process.env.WEATHER_API_BASE_URL || 'https://rapidweather.p.rapidapi.com/data/2.5/weather',
-  forecast: process.env.WEATHER_FORECAST_API_URL || 'https://rapidweather.p.rapidapi.com/data/2.5/forecast',
-  airPollution: process.env.WEATHER_AIR_POLLUTION_API_URL || 'https://rapidweather.p.rapidapi.com/data/2.5/air_pollution',
-  geocoding: process.env.WEATHER_GEOCODING_API_URL || 'https://rapidweather.p.rapidapi.com/geo/1.0/direct',
+  weather: process.env.WEATHER_API_BASE_URL,
+  forecast: process.env.WEATHER_FORECAST_API_URL,
+  airPollution: process.env.WEATHER_AIR_POLLUTION_API_URL,
+  geocoding: process.env.WEATHER_GEOCODING_API_URL,
 };
 
 const ALLOWED_PARAMS = new Set(['q', 'lat', 'lon', 'units', 'lang', 'limit']);

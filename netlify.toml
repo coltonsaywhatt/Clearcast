@@ -1,5 +1,5 @@
 [build]
-  command = "WEATHER_API_PROXY_URL=/.netlify/functions/weather npm run build"
+  command = "WEATHER_API_PROXY_URL=/.netlify/functions/weather XWEATHER_ALERTS_PROXY_URL=/.netlify/functions/xweather-alerts npm run build"
   publish = "dist/weather-app"
   functions = "netlify/functions"
 
