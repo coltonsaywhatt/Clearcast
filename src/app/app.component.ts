@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Chart, registerables, type ChartConfiguration, type ChartOptions } from 'chart.js';
-import { catchError, debounceTime, distinctUntilChanged, forkJoin, of, Subject, Subscription, switchMap, tap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, forkJoin, map, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import {
   AirQualityItem,
   ForecastDay,
@@ -34,6 +34,13 @@ Chart.register(...registerables);
 
 type ThemeMode = 'dark' | 'light';
 type SearchTarget = string | { lat: number; lon: number; name: string };
+interface ReadinessItem {
+  label: string;
+  value: string;
+  detail: string;
+  icon: string;
+  tone: 'good' | 'watch' | 'caution';
+}
 
 @Component({
   selector: 'app-root',
@@ -183,6 +190,12 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const activeSuggestion = this.suggestions[this.activeSuggestionIndex];
+    if (activeSuggestion) {
+      this.onSuggestionSelect(activeSuggestion);
+      return;
+    }
+
     this.suggestions = [];
     this.activeSuggestionIndex = -1;
     this.search(city);
@@ -216,11 +229,16 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onSuggestionSelect(location: GeoLocation): void {
-    this.cityName = '';
+    this.cityName = this.locationLabel(location);
     this.searchQuery = '';
     this.suggestions = [];
     this.activeSuggestionIndex = -1;
-    this.search({ lat: location.lat, lon: location.lon, name: this.locationLabel(location) });
+    this.searchTerms$.next('');
+    this.search({
+      lat: location.lat,
+      lon: location.lon,
+      name: [location.name, location.country].filter(Boolean).join(', ')
+    }, true);
   }
 
   clearSearch(): void {
@@ -407,6 +425,45 @@ export class AppComponent implements OnInit, OnDestroy {
     return 'fa-sun';
   }
 
+  weatherConditionImage(icon?: string, main?: string): string {
+    return `assets/weather-conditions/${this.weatherConditionAsset(icon, main)}.png`;
+  }
+
+  weatherConditionBackground(icon?: string, main?: string): string {
+    return `assets/weather-backgrounds/${this.weatherConditionAsset(icon, main)}.png`;
+  }
+
+  private weatherConditionAsset(icon?: string, main?: string): string {
+    const code = icon?.slice(0, 2);
+    const isNight = icon?.endsWith('n');
+    const condition = main?.toLowerCase() ?? '';
+    let asset = 'partly-cloudy';
+
+    if (code === '01') {
+      asset = isNight ? 'clear-night' : 'clear-day';
+    } else if (code === '02') {
+      asset = 'partly-cloudy';
+    } else if (code === '03' || code === '04') {
+      asset = 'clouds';
+    } else if (code === '09') {
+      asset = condition.includes('drizzle') ? 'drizzle' : 'rain';
+    } else if (code === '10') {
+      asset = condition.includes('drizzle') ? 'drizzle' : 'rain';
+    } else if (code === '11' || condition.includes('thunder')) {
+      asset = 'thunderstorm';
+    } else if (code === '13' || condition.includes('snow')) {
+      asset = 'snow';
+    } else if (code === '50' || condition.includes('mist') || condition.includes('fog') || condition.includes('haze')) {
+      asset = 'mist';
+    } else if (condition.includes('rain')) {
+      asset = 'rain';
+    } else if (condition.includes('cloud')) {
+      asset = 'clouds';
+    }
+
+    return asset;
+  }
+
   formatTemp(value?: number): string {
     return formatTemperature(value, this.unit);
   }
@@ -493,7 +550,15 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   get hasDashboard(): boolean {
-    return !!this.weatherData && !this.loading;
+    return !!this.weatherData;
+  }
+
+  get isInitialLoading(): boolean {
+    return this.loading && !this.weatherData;
+  }
+
+  get isRefreshingDashboard(): boolean {
+    return this.loading && !!this.weatherData;
   }
 
   get comfortScore(): number {
@@ -533,6 +598,128 @@ export class AppComponent implements OnInit, OnDestroy {
       return 'Limited';
     }
     return 'Poor';
+  }
+
+  get readinessScore(): number {
+    if (!this.weatherData) {
+      return 0;
+    }
+
+    const windLimit = this.unit === 'imperial' ? 24 : 10.7;
+    const rainPenalty = Math.min(this.nextRainChance * 0.42, 42);
+    const windPenalty = Math.min(Math.max((this.weatherData.wind.speed ?? 0) - windLimit, 0) * 2.2, 22);
+    const aqiPenalty = Math.max((this.airQuality?.main?.aqi ?? 1) - 1, 0) * 8;
+    const visibilityMeters = this.weatherData.visibility ?? 10000;
+    const visibilityPenalty = visibilityMeters < 6000 ? 12 : visibilityMeters < 9000 ? 5 : 0;
+    const comfortPenalty = Math.max(70 - this.comfortScore, 0) * 0.18;
+
+    return Math.max(0, Math.min(100, Math.round(100 - rainPenalty - windPenalty - aqiPenalty - visibilityPenalty - comfortPenalty)));
+  }
+
+  get readinessLabel(): string {
+    if (this.readinessScore >= 82) {
+      return 'Clear to go';
+    }
+    if (this.readinessScore >= 64) {
+      return 'Plan normally';
+    }
+    if (this.readinessScore >= 42) {
+      return 'Pack backup';
+    }
+    return 'Stay weather-aware';
+  }
+
+  get readinessTone(): 'good' | 'watch' | 'caution' {
+    if (this.readinessScore >= 75) {
+      return 'good';
+    }
+    if (this.readinessScore >= 50) {
+      return 'watch';
+    }
+    return 'caution';
+  }
+
+  get readinessItems(): ReadinessItem[] {
+    if (!this.weatherData) {
+      return [];
+    }
+
+    const nextHours = this.hourlyForecast.slice(0, 8);
+    const peakRain = Math.max(...nextHours.map(hour => hour.rainChance), this.nextRainChance, 0);
+    const peakWind = Math.max(...nextHours.map(hour => hour.windSpeed), this.weatherData.wind.speed ?? 0);
+    const gust = this.weatherData.wind.gust;
+    const poorVisibility = (this.weatherData.visibility ?? 10000) < 8000;
+    const aqi = this.airQuality?.main?.aqi ?? 1;
+
+    return [
+      {
+        label: 'Rain gear',
+        value: peakRain >= 60 ? 'Bring it' : peakRain >= 30 ? 'Optional' : 'Skip',
+        detail: `Peak chance ${peakRain}%`,
+        icon: 'fa-umbrella',
+        tone: peakRain >= 60 ? 'caution' : peakRain >= 30 ? 'watch' : 'good'
+      },
+      {
+        label: 'Wind',
+        value: `${Math.round(peakWind)} ${this.windUnit}`,
+        detail: gust ? `Gusts near ${Math.round(gust)} ${this.windUnit}` : `${this.windDirection || 'Variable'} flow`,
+        icon: 'fa-wind',
+        tone: peakWind >= (this.unit === 'imperial' ? 24 : 10.7) ? 'caution' : peakWind >= (this.unit === 'imperial' ? 15 : 6.7) ? 'watch' : 'good'
+      },
+      {
+        label: 'Air',
+        value: this.aqiLabel,
+        detail: this.airQuality ? `PM2.5 ${this.airQuality.components.pm2_5?.toFixed(1) ?? '--'}` : 'Live AQI unavailable',
+        icon: 'fa-lungs',
+        tone: aqi >= 4 ? 'caution' : aqi >= 3 ? 'watch' : 'good'
+      },
+      {
+        label: 'Visibility',
+        value: this.visibility,
+        detail: poorVisibility ? 'Reduced visibility' : 'Clean sightlines',
+        icon: 'fa-eye',
+        tone: poorVisibility ? 'watch' : 'good'
+      }
+    ];
+  }
+
+  get forecastSignals(): ReadinessItem[] {
+    const nextHours = this.hourlyForecast.slice(0, 8);
+    if (!nextHours.length) {
+      return [];
+    }
+
+    const rainWindow = nextHours.find(hour => hour.rainChance >= 35);
+    const peakRain = [...nextHours].sort((a, b) => b.rainChance - a.rainChance)[0];
+    const peakWind = [...nextHours].sort((a, b) => b.windSpeed - a.windSpeed)[0];
+    const first = nextHours[0];
+    const last = nextHours[nextHours.length - 1];
+    const tempDelta = Math.round(last.temp - first.temp);
+    const trend = tempDelta > 1 ? 'Warming' : tempDelta < -1 ? 'Cooling' : 'Steady';
+
+    return [
+      {
+        label: 'Rain ETA',
+        value: rainWindow ? rainWindow.time : 'No rush',
+        detail: rainWindow ? `${rainWindow.rainChance}% chance starts here` : `Peak stays near ${peakRain.rainChance}%`,
+        icon: 'fa-cloud-rain',
+        tone: rainWindow && rainWindow.rainChance >= 60 ? 'caution' : rainWindow ? 'watch' : 'good'
+      },
+      {
+        label: 'Temp trend',
+        value: trend,
+        detail: `${tempDelta > 0 ? '+' : ''}${tempDelta}°${this.unitSymbol} by ${last.time}`,
+        icon: tempDelta < -1 ? 'fa-temperature-arrow-down' : 'fa-temperature-arrow-up',
+        tone: Math.abs(tempDelta) >= 8 ? 'watch' : 'good'
+      },
+      {
+        label: 'Wind peak',
+        value: `${Math.round(peakWind.windSpeed)} ${this.windUnit}`,
+        detail: `Highest around ${peakWind.time}`,
+        icon: 'fa-gauge-high',
+        tone: peakWind.windSpeed >= (this.unit === 'imperial' ? 24 : 10.7) ? 'caution' : peakWind.windSpeed >= (this.unit === 'imperial' ? 15 : 6.7) ? 'watch' : 'good'
+      }
+    ];
   }
 
   get mapEmbedUrl(): SafeResourceUrl {
@@ -606,11 +793,18 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       }),
         switchMap(query => query.length < 2
-          ? of([])
-          : this.weatherService.searchLocations(query).pipe(catchError(() => of(this.getFallbackLocations(query))))
+          ? of({ query, locations: [] })
+          : this.weatherService.searchLocations(query).pipe(
+            catchError(() => of(this.getFallbackLocations(query))),
+            map(locations => ({ query, locations }))
+          )
         )
-      ).subscribe(locations => {
-        this.suggestions = locations.length ? locations : this.getFallbackLocations(this.searchQuery);
+      ).subscribe(({ query, locations }) => {
+        if (query !== this.searchQuery) {
+          return;
+        }
+
+        this.suggestions = locations.length ? locations : this.getFallbackLocations(query);
         this.activeSuggestionIndex = this.suggestions.length ? 0 : -1;
         this.suggestionsLoading = false;
       })
@@ -651,10 +845,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
     const current$ = typeof target === 'string'
       ? this.weatherService.getWeatherData(target, this.unit)
-      : this.weatherService.getWeatherByCoords(target.lat, target.lon, this.unit);
+      : this.weatherService.getWeatherByCoords(target.lat, target.lon, this.unit, target.name);
     const forecast$ = typeof target === 'string'
       ? this.weatherService.getForecast(target, this.unit)
-      : this.weatherService.getForecastByCoords(target.lat, target.lon, this.unit);
+      : this.weatherService.getForecastByCoords(target.lat, target.lon, this.unit, target.name);
 
     this.subscriptions.add(
       forkJoin({
@@ -696,6 +890,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.forecastLoading = false;
 
     if (this.weatherData) {
+      const targetLabel = typeof target === 'string' ? target : target.name;
+      this.errorMessage = `Could not refresh "${targetLabel}". Keeping the last loaded forecast.`;
       return;
     }
 
@@ -712,7 +908,7 @@ export class AppComponent implements OnInit, OnDestroy {
       };
       this.processForecast(undefined);
       this.alerts = [];
-      this.alertNotice = 'Xweather alerts are optional and not configured for demo mode.';
+      this.alertNotice = 'OpenWeather safety alerts are available when the provider returns active advisories.';
       this.themeClass = `theme-${getWeatherMood(this.weatherData)}`;
       this.insight = buildInsight(this.weatherData, [], this.airQuality, this.unit);
       this.updateLocalTime();
@@ -859,6 +1055,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private getInitialTarget(): SearchTarget {
     return this.favorites[0] || 'Tampa';
+  }
+
+  private locationSearchQuery(location: GeoLocation): string {
+    return [location.name, location.country].filter(Boolean).join(',');
   }
 
   private applyTheme(): void {
@@ -1029,11 +1229,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private alertNoticeFromResponse(response?: XweatherAlertsResponse): string {
     if (!response) {
-      return 'Xweather alerts are temporarily unavailable.';
+      return 'OpenWeather safety alerts are temporarily unavailable.';
     }
 
     if (response.success === false) {
-      return response.error?.description || 'Xweather alerts are optional. Add Xweather credentials to enable live severe weather alerts.';
+      return response.error?.description || response.error?.message || 'OpenWeather safety alerts are available when One Call alerts are enabled for this key.';
     }
 
     return 'No active severe weather alerts for this location.';

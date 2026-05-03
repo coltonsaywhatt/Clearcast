@@ -36,12 +36,13 @@ exports.handler = async (event) => {
     }
   });
 
+  if (isOpenWeatherEndpoint(url)) {
+    url.searchParams.set('appid', process.env.WEATHER_API_KEY_HEADER_VALUE);
+  }
+
   try {
     const response = await fetch(url, {
-      headers: {
-        [process.env.WEATHER_API_HOST_HEADER_NAME || 'X-RapidAPI-Host']: process.env.WEATHER_API_HOST_HEADER_VALUE || '',
-        [process.env.WEATHER_API_KEY_HEADER_NAME || 'X-RapidAPI-Key']: process.env.WEATHER_API_KEY_HEADER_VALUE,
-      },
+      headers: isOpenWeatherEndpoint(url) ? {} : providerHeaders(),
     });
 
     const body = await response.text();
@@ -63,5 +64,18 @@ function json(statusCode, body) {
     statusCode,
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
+  };
+}
+
+function isOpenWeatherEndpoint(url) {
+  return url.hostname.includes('openweathermap.org');
+}
+
+function providerHeaders() {
+  const keyHeader = process.env.WEATHER_API_KEY_HEADER_NAME || 'X-RapidAPI-Key';
+  const hostHeader = process.env.WEATHER_API_HOST_HEADER_NAME || 'X-RapidAPI-Host';
+  return {
+    [hostHeader]: process.env.WEATHER_API_HOST_HEADER_VALUE || '',
+    [keyHeader]: process.env.WEATHER_API_KEY_HEADER_VALUE,
   };
 }

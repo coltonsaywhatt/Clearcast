@@ -49,10 +49,11 @@ function proxyWeather(requestUrl, res) {
     }
   });
 
-  return proxyJson(url, res, {
-    [process.env.WEATHER_API_HOST_HEADER_NAME || 'X-RapidAPI-Host']: process.env.WEATHER_API_HOST_HEADER_VALUE || '',
-    [process.env.WEATHER_API_KEY_HEADER_NAME || 'X-RapidAPI-Key']: process.env.WEATHER_API_KEY_HEADER_VALUE || '',
-  });
+  if (isOpenWeatherEndpoint(url)) {
+    url.searchParams.set('appid', process.env.WEATHER_API_KEY_HEADER_VALUE || '');
+  }
+
+  return proxyJson(url, res, isOpenWeatherEndpoint(url) ? {} : providerHeaders());
 }
 
 function proxyXweatherAlerts(requestUrl, res) {
@@ -63,29 +64,32 @@ function proxyXweatherAlerts(requestUrl, res) {
     return sendJson(res, 400, { message: 'Latitude and longitude are required.' });
   }
 
-  if (!process.env.XWEATHER_CLIENT_ID || !process.env.XWEATHER_CLIENT_SECRET) {
-    return sendJson(res, 200, { success: false, response: [], notice: 'Xweather alerts are not configured.' });
+  if (!process.env.WEATHER_API_KEY_HEADER_VALUE) {
+    return sendJson(res, 200, { success: false, response: [], notice: 'OpenWeather alerts are not configured.' });
   }
 
-  const url = new URL(`https://data.api.xweather.com/alerts/${lat},${lon}`);
-  url.searchParams.set('client_id', process.env.XWEATHER_CLIENT_ID);
-  url.searchParams.set('client_secret', process.env.XWEATHER_CLIENT_SECRET);
-  url.searchParams.set('limit', '6');
-  return proxyJson(url, res);
+  const url = new URL('https://api.openweathermap.org/data/3.0/onecall');
+  url.searchParams.set('lat', lat);
+  url.searchParams.set('lon', lon);
+  url.searchParams.set('appid', process.env.WEATHER_API_KEY_HEADER_VALUE);
+  url.searchParams.set('exclude', 'minutely,hourly,daily');
+
+  return proxyJson(url, res, {}, mapOpenWeatherAlerts);
 }
 
-function proxyJson(url, res, headers = {}) {
+function proxyJson(url, res, headers = {}, transform) {
   https.get(url, { headers }, upstream => {
     let body = '';
     upstream.on('data', chunk => {
       body += chunk;
     });
     upstream.on('end', () => {
-      res.writeHead(upstream.statusCode || 502, {
+      const payload = transform ? transform(body, upstream.statusCode || 502) : body;
+      res.writeHead(transform ? 200 : upstream.statusCode || 502, {
         'content-type': upstream.headers['content-type'] || 'application/json',
         'cache-control': 'no-store',
       });
-      res.end(body);
+      res.end(payload);
     });
   }).on('error', () => {
     sendJson(res, 502, { message: 'Unable to reach upstream weather service.' });
@@ -95,4 +99,53 @@ function proxyJson(url, res, headers = {}) {
 function sendJson(res, statusCode, body) {
   res.writeHead(statusCode, { 'content-type': 'application/json' });
   res.end(JSON.stringify(body));
+}
+
+function isOpenWeatherEndpoint(url) {
+  return url.hostname.includes('openweathermap.org');
+}
+
+function providerHeaders() {
+  const keyHeader = process.env.WEATHER_API_KEY_HEADER_NAME || 'X-RapidAPI-Key';
+  const hostHeader = process.env.WEATHER_API_HOST_HEADER_NAME || 'X-RapidAPI-Host';
+  return {
+    [hostHeader]: process.env.WEATHER_API_HOST_HEADER_VALUE || '',
+    [keyHeader]: process.env.WEATHER_API_KEY_HEADER_VALUE || '',
+  };
+}
+
+function mapOpenWeatherAlerts(body, statusCode) {
+  if (statusCode >= 400) {
+    return JSON.stringify({ success: false, response: [], error: safeJson(body) });
+  }
+
+  const parsed = safeJson(body);
+  const alerts = Array.isArray(parsed.alerts) ? parsed.alerts : [];
+  return JSON.stringify({
+    success: true,
+    response: alerts.map((alert, index) => ({
+      id: `${alert.sender_name || 'openweather'}-${alert.start || index}`,
+      details: {
+        name: alert.event || 'Weather Alert',
+        type: alert.event || 'Alert',
+        color: 'yellow',
+        source: alert.sender_name || 'OpenWeather',
+        body: alert.description,
+        bodyFull: alert.description,
+      },
+      timestamps: {
+        issued: alert.start,
+        begins: alert.start,
+        expires: alert.end,
+      },
+    })),
+  });
+}
+
+function safeJson(body) {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return {};
+  }
 }

@@ -168,6 +168,7 @@ export interface XweatherAlertsResponse {
   error?: {
     code?: string;
     description?: string;
+    message?: string;
   };
   response?: XweatherAlertResult[];
 }

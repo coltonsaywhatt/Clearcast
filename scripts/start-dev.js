@@ -1,13 +1,17 @@
 const { spawn } = require('child_process');
 
 const isWindows = process.platform === 'win32';
+const cliArgs = process.argv.slice(2);
 
 const proxy = spawn(process.execPath, ['./scripts/dev-proxy.js'], {
   stdio: 'inherit',
   env: process.env,
 });
 
-const angular = spawn(isWindows ? 'npx.cmd' : 'npx', ['ng', 'serve', '--proxy-config', 'proxy.conf.json'], {
+const angularArgs = ['ng', 'serve', '--proxy-config', 'proxy.conf.json', ...cliArgs];
+const angularCommand = isWindows ? 'cmd.exe' : 'npx';
+const angularCommandArgs = isWindows ? ['/d', '/s', '/c', 'npx.cmd', ...angularArgs] : angularArgs;
+const angular = spawn(angularCommand, angularCommandArgs, {
   stdio: 'inherit',
   env: process.env,
 });

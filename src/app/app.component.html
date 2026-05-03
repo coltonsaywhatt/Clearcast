@@ -21,13 +21,6 @@
           </div>
         </div>
 
-        <div class="header-status" aria-label="Current dashboard status">
-          <span class="live-dot"></span>
-          <div>
-            <strong>{{ headerLocation }}</strong>
-            <small>{{ headerCondition | titlecase }}</small>
-          </div>
-        </div>
       </div>
 
       <nav class="top-actions" aria-label="Weather controls">
@@ -35,8 +28,23 @@
           <i class="fa-solid fa-location-crosshairs"></i>
           <span>Local</span>
         </button>
-        <button class="icon-button" type="button" (click)="toggleTheme()" [attr.aria-label]="themeLabel" [title]="themeLabel">
-          <i class="fa-solid" [ngClass]="themeMode === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+        <button
+          class="theme-slider"
+          type="button"
+          (click)="toggleTheme()"
+          [class.is-night]="themeMode === 'dark'"
+          [attr.aria-label]="themeLabel"
+          [attr.aria-pressed]="themeMode === 'dark'"
+          [title]="themeLabel">
+          <span class="theme-slider-track" aria-hidden="true">
+            <span class="theme-slider-option">
+              <i class="fa-solid fa-sun"></i>
+            </span>
+            <span class="theme-slider-option">
+              <i class="fa-solid fa-moon"></i>
+            </span>
+            <span class="theme-slider-thumb"></span>
+          </span>
         </button>
         <button class="unit-toggle" type="button" (click)="toggleUnit()" aria-label="Toggle temperature unit">
           <span [class.active]="unit === 'imperial'">°F</span>
@@ -72,6 +80,7 @@
           type="button"
           class="suggestion-item"
           [class.active]="suggestions[activeSuggestionIndex] === suggestion"
+          (mousedown)="$event.preventDefault()"
           (click)="onSuggestionSelect(suggestion)"
           role="option">
           <span>{{ locationLabel(suggestion) }}</span>
@@ -140,7 +149,7 @@
 
     <section class="alerts-panel panel" *ngIf="!loading && alerts.length" aria-label="Weather alerts">
       <div class="section-heading">
-        <span class="eyebrow">Weather alerts</span>
+        <span class="eyebrow">Safety monitor</span>
         <h3>Active advisories</h3>
       </div>
       <div class="alert-list">
@@ -154,21 +163,22 @@
       </div>
     </section>
 
-    <section class="skeleton-grid" *ngIf="loading" aria-label="Loading Clearcast">
+    <section class="skeleton-grid" *ngIf="isInitialLoading" aria-label="Loading Clearcast">
       <div class="skeleton hero-skeleton"></div>
       <div class="skeleton" *ngFor="let card of skeletonCards"></div>
     </section>
 
     <section *ngIf="hasDashboard" class="dashboard-grid" aria-label="Clearcast weather dashboard">
-      <article class="hero-card panel">
-        <div class="hero-copy">
-          <div class="hero-topline">
-            <span class="eyebrow">Current conditions</span>
-            <button type="button" class="favorite-button" (click)="toggleFavorite()" [attr.aria-pressed]="isFavorite" [title]="isFavorite ? 'Remove favorite' : 'Save favorite'">
-              <i class="fa-solid fa-star"></i>
-            </button>
-          </div>
+      <div class="refresh-overlay" *ngIf="isRefreshingDashboard" role="status" aria-live="polite">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <span>Updating forecast...</span>
+      </div>
 
+      <article
+        class="hero-card panel"
+        [style.--condition-bg]="'url(' + weatherConditionBackground(currentWeather?.icon, currentWeather?.main || currentWeather?.description) + ')'"
+      >
+        <div class="hero-copy">
           <h2>{{ weatherData?.name }}<span *ngIf="weatherData?.sys?.country">, {{ weatherData?.sys?.country }}</span></h2>
           <p class="condition">{{ currentWeather?.description | titlecase }}</p>
 
@@ -193,11 +203,12 @@
           </div>
         </div>
 
-        <div class="weather-orb">
-          <span class="orb-ring ring-one" aria-hidden="true"></span>
-          <span class="orb-ring ring-two" aria-hidden="true"></span>
-          <i class="fa-solid weather-symbol" [ngClass]="weatherIconClass(currentWeather?.icon, currentWeather?.main)" aria-hidden="true"></i>
-          <span>{{ currentWeather?.main }}</span>
+        <div class="weather-orb condition-art-shell" [attr.aria-label]="'Current condition: ' + (currentWeather?.main || 'Weather')">
+          <img
+            class="condition-art"
+            [src]="weatherConditionImage(currentWeather?.icon, currentWeather?.main || currentWeather?.description)"
+            [alt]="(currentWeather?.description | titlecase) || 'Current weather condition'"
+          />
         </div>
       </article>
 
@@ -227,6 +238,34 @@
             <div class="progress-fill" [style.width.%]="dayProgress"></div>
           </div>
           <small>{{ daylightDuration }} of daylight · sunrise {{ formattedSunrise }} · sunset {{ formattedSunset }}</small>
+        </div>
+      </article>
+
+      <article class="readiness-card panel" aria-label="OpenWeather ready check">
+        <div class="section-heading">
+          <span class="eyebrow">OpenWeather live check</span>
+          <h3>Ready check</h3>
+        </div>
+        <div class="readiness-summary" [ngClass]="readinessTone">
+          <span>Go score</span>
+          <strong>{{ readinessScore }}</strong>
+          <p>{{ readinessLabel }}</p>
+        </div>
+        <div class="readiness-grid">
+          <div class="readiness-item" *ngFor="let item of readinessItems" [ngClass]="item.tone">
+            <i class="fa-solid" [ngClass]="item.icon"></i>
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+            <small>{{ item.detail }}</small>
+          </div>
+        </div>
+        <div class="forecast-signals" aria-label="Forecast signals">
+          <div class="forecast-signal" *ngFor="let signal of forecastSignals" [ngClass]="signal.tone">
+            <i class="fa-solid" [ngClass]="signal.icon"></i>
+            <span>{{ signal.label }}</span>
+            <strong>{{ signal.value }}</strong>
+            <small>{{ signal.detail }}</small>
+          </div>
         </div>
       </article>
 
@@ -310,8 +349,8 @@
           <i class="fa-solid fa-person-walking"></i>
           <span>{{ bestOutdoorWindow }}</span>
         </div>
-        <div class="hourly-strip">
-          <button class="hour-card" type="button" *ngFor="let hour of hourlyForecast; trackBy: trackByHour" (click)="selectHourDetail(hour)">
+        <div class="hourly-strip" role="list" aria-label="Hourly forecast">
+          <div class="hour-card" role="listitem" *ngFor="let hour of hourlyForecast; trackBy: trackByHour">
             <span class="hour-time">{{ hour.time }}</span>
             <span class="hour-main">
               <i class="fa-solid forecast-symbol" [ngClass]="weatherIconClass(hour.icon, hour.description)" aria-hidden="true"></i>
@@ -321,7 +360,7 @@
               <small><i class="fa-solid fa-droplet"></i>{{ hour.rainChance }}%</small>
               <small><i class="fa-solid fa-wind"></i>{{ hour.windSpeed | number:'1.0-0' }} {{ windUnit }}</small>
             </span>
-          </button>
+          </div>
         </div>
       </article>
 
